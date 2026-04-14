@@ -12,10 +12,10 @@ Audio Input → Speech-to-Text → NLP Pipeline → Magic Moments → LLM Brain 
 
 | Stage | Technology | Purpose |
 |-------|-----------|---------|
-| 🎧 Speech-to-Text | `faster-whisper` | Audio → Transcript |
+| 🎧 Speech-to-Text | Groq Whisper Large V3 | Audio → Transcript |
 | 🧩 NLP Pipeline | `transformers` + `spaCy` | Intent, Sentiment, NER, Objections |
 | ⚡ Magic Moments | Hybrid (Rules + Sentiment) | Detect turning points |
-| 🤖 LLM Brain | Google Gemini | Summary, Score, Coaching |
+| 🤖 LLM Brain | Groq Llama 3.3 70B | Summary, Score, Coaching |
 | 🔍 RAG | ChromaDB + Sentence Transformers | Historical pattern search |
 | 📊 Dashboard | FastAPI + Vanilla JS | Real-time visualization |
 
@@ -43,11 +43,11 @@ python -m spacy download en_core_web_sm
 # Copy environment template
 copy .env.example .env
 
-# Edit .env and add your Gemini API key:
-# GEMINI_API_KEY=your_key_here
+# Edit .env and add your Groq API key:
+# GROQ_API_KEY=your_key_here
 ```
 
-Get a free Gemini API key: https://aistudio.google.com/app/apikey
+Get a free Groq API key: https://console.groq.com/keys
 
 ### 3. Run
 ```bash
@@ -113,7 +113,8 @@ Click **"Run Demo Analysis"** on the dashboard to see the full pipeline in actio
 ## 🎯 Tech Stack
 
 - **Backend**: FastAPI, Python 3.10+
-- **ML/NLP**: Transformers, spaCy, faster-whisper
-- **LLM**: Google Gemini 1.5 Flash
+- **ML/NLP**: Transformers, spaCy
+- **STT**: Groq Whisper Large V3
+- **LLM**: Groq Llama 3.3 70B Versatile
 - **Vector DB**: ChromaDB
 - **Frontend**: Vanilla HTML/CSS/JS (premium dark theme)

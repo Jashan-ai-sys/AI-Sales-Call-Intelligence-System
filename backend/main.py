@@ -3,6 +3,7 @@ AI Sales Call Intelligence System — FastAPI Application
 Full pipeline: Audio → Speech-to-Text → NLP → Magic Moments → LLM → RAG → Dashboard
 """
 import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -19,11 +20,26 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ─── Frontend Path ────────────────────────────────────────
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+
+# ─── Lifespan ─────────────────────────────────────────────
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("=" * 60)
+    logger.info("🧠 AI Sales Call Intelligence System")
+    logger.info("=" * 60)
+    logger.info("Pipeline: Audio → STT → NLP → Magic Moments → LLM → RAG")
+    logger.info(f"Frontend: {'✅ Serving from ' + str(FRONTEND_DIR) if FRONTEND_DIR.exists() else '❌ Not found'}")
+    logger.info("=" * 60)
+    yield
+
 # ─── FastAPI App ──────────────────────────────────────────
 app = FastAPI(
     title="🧠 AI Sales Call Intelligence",
     description="Automatically analyze sales calls → extract insights → improve conversions",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # ─── CORS ─────────────────────────────────────────────────
@@ -41,8 +57,6 @@ app.include_router(analysis.router)
 app.include_router(rag.router)
 
 # ─── Static Frontend ─────────────────────────────────────
-FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
-
 if FRONTEND_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 
@@ -63,12 +77,3 @@ async def health_check():
     }
 
 
-# ─── Startup ─────────────────────────────────────────────
-@app.on_event("startup")
-async def startup():
-    logger.info("=" * 60)
-    logger.info("🧠 AI Sales Call Intelligence System")
-    logger.info("=" * 60)
-    logger.info("Pipeline: Audio → STT → NLP → Magic Moments → LLM → RAG")
-    logger.info(f"Frontend: {'✅ Serving from ' + str(FRONTEND_DIR) if FRONTEND_DIR.exists() else '❌ Not found'}")
-    logger.info("=" * 60)

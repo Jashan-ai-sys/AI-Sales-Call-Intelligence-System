@@ -35,10 +35,22 @@ class RAGService:
             from backend.config import CHROMA_DIR
             
             logger.info("Initializing ChromaDB...")
-            self._client = chromadb.PersistentClient(
-                path=str(CHROMA_DIR),
-                settings=Settings(anonymized_telemetry=False)
-            )
+            try:
+                self._client = chromadb.PersistentClient(
+                    path=str(CHROMA_DIR),
+                    settings=Settings(
+                        anonymized_telemetry=False,
+                        allow_reset=True,
+                        is_persistent=True
+                    )
+                )
+            except Exception as e:
+                if "_type" in str(e) or "capture" in str(e):
+                    logger.warning(f"ChromaDB telemetry error caught, attempting fallback init: {e}")
+                    # Fallback with minimal settings
+                    self._client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+                else:
+                    raise e
             self._collection = self._client.get_or_create_collection(
                 name="sales_calls",
                 metadata={"hnsw:space": "cosine"}
@@ -234,10 +246,8 @@ class RAGService:
         """Synthesize an answer from retrieved context using LLM."""
         try:
             from backend.services.llm import llm_service
-            llm_service._load_model()
             
-            if llm_service._model:
-                prompt = f"""Based on the following sales call data, answer this question concisely:
+            prompt = f"""Based on the following sales call data, answer this question concisely:
 
 Question: {query}
 
@@ -245,9 +255,10 @@ Context from past calls:
 {context}
 
 Provide a clear, actionable answer based on the data. If the data doesn't contain enough information, say so."""
-                
-                response = llm_service._model.generate_content(prompt)
-                return response.text.strip()
+            
+            answer = llm_service.generate_sync(prompt)
+            if answer:
+                return answer
         except Exception as e:
             logger.error(f"Answer synthesis failed: {e}")
         

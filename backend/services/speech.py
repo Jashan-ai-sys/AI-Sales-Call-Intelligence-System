@@ -1,6 +1,7 @@
 """
-Speech-to-Text Service — Whisper-based transcription
+Speech-to-Text Service — Groq Whisper API
 Converts uploaded audio files into structured transcripts with speaker labels.
+Uses Groq's hosted Whisper Large V3 for fast, accurate transcription.
 """
 import re
 import logging
@@ -10,31 +11,36 @@ logger = logging.getLogger(__name__)
 
 
 class SpeechService:
-    """Handles audio → text conversion using faster-whisper."""
+    """Handles audio → text conversion using Groq Whisper API."""
     
-    def __init__(self, model_size: str = "base"):
-        self.model_size = model_size
-        self.model = None
+    def __init__(self):
+        self._client = None
+        self._loaded = False
         
-    def _load_model(self):
-        """Lazy-load the Whisper model to avoid memory usage when not needed."""
-        if self.model is None:
-            try:
-                from faster_whisper import WhisperModel
-                logger.info(f"Loading Whisper model: {self.model_size}")
-                self.model = WhisperModel(
-                    self.model_size,
-                    device="cpu",  # Use "cuda" if GPU available
-                    compute_type="int8"
-                )
-                logger.info("Whisper model loaded successfully")
-            except ImportError:
-                logger.warning("faster-whisper not installed, using mock transcription")
-                self.model = "mock"
+    def _load_client(self):
+        """Lazy-load the Groq client."""
+        if self._loaded:
+            return
+            
+        try:
+            from groq import Groq
+            from backend.config import GROQ_API_KEY
+            
+            if GROQ_API_KEY:
+                self._client = Groq(api_key=GROQ_API_KEY)
+                logger.info("Groq Whisper client initialized")
+            else:
+                logger.warning("No GROQ_API_KEY found, using mock transcription")
+        except ImportError:
+            logger.warning("groq package not installed, using mock transcription")
+        except Exception as e:
+            logger.error(f"Failed to init Groq client: {e}")
+            
+        self._loaded = True
                 
     def transcribe(self, audio_path: str) -> dict:
         """
-        Transcribe an audio file to text with timestamps.
+        Transcribe an audio file to text using Groq Whisper API.
         
         Returns:
             {
@@ -43,46 +49,66 @@ class SpeechService:
                 "turns": [{"speaker": str, "text": str}]
             }
         """
-        self._load_model()
+        self._load_client()
         
-        if self.model == "mock":
+        if not self._client:
+            logger.warning("Groq client not available, using mock transcription")
             return self._mock_transcribe(audio_path)
             
         try:
-            segments_gen, info = self.model.transcribe(
-                audio_path,
-                beam_size=5,
-                language="en",
-                vad_filter=True,
-                vad_parameters=dict(
-                    min_silence_duration_ms=500,
-                    speech_pad_ms=400,
-                )
-            )
+            file_path = Path(audio_path)
+            if not file_path.exists():
+                raise FileNotFoundError(f"Audio file not found: {audio_path}")
             
+            logger.info(f"Transcribing with Groq Whisper: {file_path.name}")
+            
+            with open(audio_path, "rb") as audio_file:
+                transcription = self._client.audio.transcriptions.create(
+                    file=(file_path.name, audio_file.read()),
+                    model="whisper-large-v3",
+                    language="en",
+                    response_format="verbose_json",
+                )
+            
+            # Parse response
             segments = []
             full_text_parts = []
             
-            for segment in segments_gen:
-                segments.append({
-                    "start": round(segment.start, 2),
-                    "end": round(segment.end, 2),
-                    "text": segment.text.strip()
-                })
-                full_text_parts.append(segment.text.strip())
+            if hasattr(transcription, 'segments') and transcription.segments:
+                for seg in transcription.segments:
+                    segments.append({
+                        "start": round(seg.get("start", seg.start) if isinstance(seg, dict) else seg.start, 2),
+                        "end": round(seg.get("end", seg.end) if isinstance(seg, dict) else seg.end, 2),
+                        "text": (seg.get("text", "") if isinstance(seg, dict) else seg.text).strip()
+                    })
+                    full_text_parts.append(segments[-1]["text"])
+            else:
+                # Fallback: use the full text
+                full_text = transcription.text if hasattr(transcription, 'text') else str(transcription)
+                full_text_parts.append(full_text)
+                segments.append({"start": 0.0, "end": 0.0, "text": full_text})
             
             full_text = " ".join(full_text_parts)
             turns = self._detect_speakers(full_text, segments)
+            
+            # Get duration
+            duration = 0.0
+            if hasattr(transcription, 'duration') and transcription.duration:
+                duration = float(transcription.duration)
+            elif segments:
+                duration = segments[-1]["end"]
+            
+            logger.info(f"Transcription complete: {len(segments)} segments, {duration:.1f}s")
             
             return {
                 "full_text": full_text,
                 "segments": segments,
                 "turns": turns,
-                "duration": info.duration if hasattr(info, 'duration') else segments[-1]["end"] if segments else 0
+                "duration": duration
             }
             
         except Exception as e:
-            logger.error(f"Transcription failed: {e}")
+            logger.error(f"Groq transcription failed: {e}")
             raise RuntimeError(f"Failed to transcribe audio: {e}")
     
     def _detect_speakers(self, full_text: str, segments: list) -> list:

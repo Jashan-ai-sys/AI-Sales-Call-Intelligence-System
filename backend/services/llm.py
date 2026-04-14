@@ -1,6 +1,6 @@
 """
-LLM Layer Service — The Brain
-Uses Google Gemini to generate:
+LLM Layer Service — The Brain (Groq-powered)
+Uses Groq API with Llama 3.3 70B to generate:
   A. Call summaries
   B. Call scores (0-100)
   C. Agent coaching suggestions
@@ -14,31 +14,31 @@ logger = logging.getLogger(__name__)
 
 
 class LLMService:
-    """LLM-powered intelligence layer for call analysis."""
+    """LLM-powered intelligence layer for call analysis using Groq."""
     
     def __init__(self):
-        self._model = None
+        self._client = None
+        self._model_name = "openai/gpt-oss-120b"
         self._loaded = False
     
     def _load_model(self):
-        """Lazy-load Gemini model."""
+        """Lazy-load Groq client."""
         if self._loaded:
             return
             
         try:
-            import google.generativeai as genai
-            from backend.config import GEMINI_API_KEY
+            from groq import Groq
+            from backend.config import GROQ_API_KEY
             
-            if GEMINI_API_KEY:
-                genai.configure(api_key=GEMINI_API_KEY)
-                self._model = genai.GenerativeModel("gemini-1.5-flash")
-                logger.info("Gemini model loaded successfully")
+            if GROQ_API_KEY:
+                self._client = Groq(api_key=GROQ_API_KEY)
+                logger.info(f"Groq client initialized (model: {self._model_name})")
             else:
-                logger.warning("No GEMINI_API_KEY found, using mock LLM")
+                logger.warning("No GROQ_API_KEY found, using mock LLM")
         except ImportError:
-            logger.warning("google-generativeai not installed, using mock LLM")
+            logger.warning("groq package not installed, using mock LLM")
         except Exception as e:
-            logger.error(f"Failed to load Gemini: {e}")
+            logger.error(f"Failed to initialize Groq: {e}")
             
         self._loaded = True
     
@@ -60,8 +60,8 @@ class LLMService:
         # Build context for the LLM
         context = self._build_context(transcript, nlp_results, magic_moments)
         
-        if self._model:
-            return await self._gemini_generate(context)
+        if self._client:
+            return await self._groq_generate(context)
         else:
             return self._mock_generate(nlp_results, magic_moments)
     
@@ -123,11 +123,33 @@ Score criteria:
 
 Respond with ONLY the JSON object."""
 
-    async def _gemini_generate(self, context: str) -> dict:
-        """Generate intelligence using Gemini API."""
+    async def _groq_generate(self, context: str) -> dict:
+        """Generate intelligence using Groq API (Llama 3.3 70B)."""
         try:
-            response = self._model.generate_content(context)
-            text = response.text.strip()
+            # Groq SDK is synchronous — run in default executor
+            import asyncio
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: self._client.chat.completions.create(
+                    model=self._model_name,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a sales analytics expert. Always respond with valid JSON only. No markdown, no code blocks, no explanations."
+                        },
+                        {
+                            "role": "user",
+                            "content": context
+                        }
+                    ],
+                    temperature=0.3,
+                    max_tokens=1024,
+                    response_format={"type": "json_object"}
+                )
+            )
+            
+            text = response.choices[0].message.content.strip()
             
             # Clean up response (remove markdown code blocks if present)
             if text.startswith("```"):
@@ -142,14 +164,51 @@ Respond with ONLY the JSON object."""
             result["call_score"] = max(0, min(100, int(result.get("call_score", 50))))
             result["conversion_probability"] = max(0.0, min(1.0, float(result.get("conversion_probability", 0.5))))
             
+            # Ensure score_breakdown exists
+            if "score_breakdown" not in result:
+                result["score_breakdown"] = {"sentiment": 15, "engagement": 15, "objection_handling": 15, "closing": 15}
+            
+            # Ensure agent_suggestions exists
+            if "agent_suggestions" not in result or not result["agent_suggestions"]:
+                result["agent_suggestions"] = ["Review call recording for improvement areas."]
+            
+            logger.info(f"Groq LLM generated score: {result['call_score']}/100")
             return result
             
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM JSON response: {e}")
             return self._mock_generate({}, [])
         except Exception as e:
-            logger.error(f"Gemini generation failed: {e}")
+            logger.error(f"Groq generation failed: {e}")
             return self._mock_generate({}, [])
+    
+    def generate_sync(self, prompt: str) -> str:
+        """Synchronous generation for RAG answer synthesis."""
+        self._load_model()
+        
+        if not self._client:
+            return ""
+        
+        try:
+            response = self._client.chat.completions.create(
+                model=self._model_name,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a helpful sales analytics assistant. Provide clear, concise answers based on the provided data."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.4,
+                max_tokens=512
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.error(f"Groq sync generation failed: {e}")
+            return ""
     
     def _mock_generate(self, nlp_results: dict, magic_moments: list) -> dict:
         """

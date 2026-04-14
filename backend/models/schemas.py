@@ -19,8 +19,6 @@ class IntentResult(BaseModel):
 class EntityResult(BaseModel):
     text: str
     label: str  # PRICE, PRODUCT, COMPETITOR, ORG, PERSON
-    start: int
-    end: int
 
 class ObjectionResult(BaseModel):
     text: str

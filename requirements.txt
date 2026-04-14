@@ -19,8 +19,10 @@ chromadb==0.5.5
 sentence-transformers==3.0.1
 
 # LLM
-google-generativeai==0.7.2
+groq==0.25.0
 
 # Utilities
 uuid6==2024.7.10
 aiofiles==24.1.0
+requests
+huggingface-hub
