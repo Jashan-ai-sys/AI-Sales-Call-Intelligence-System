@@ -1,0 +1,26 @@
+# Backend
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+python-multipart==0.0.9
+python-dotenv==1.0.1
+pydantic==2.9.0
+
+# Speech-to-Text
+faster-whisper==1.0.3
+
+# NLP Pipeline
+transformers==4.44.0
+torch==2.4.0
+spacy==3.7.5
+sentencepiece==0.2.0
+
+# RAG
+chromadb==0.5.5
+sentence-transformers==3.0.1
+
+# LLM
+google-generativeai==0.7.2
+
+# Utilities
+uuid6==2024.7.10
+aiofiles==24.1.0

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered sales call intelligence system. Analyze calls, detect objections, score agents, and improve conversions.">
+    <title>SalesIQ — AI Sales Call Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- ─── SIDEBAR ─────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                </div>
+                <span class="logo-text">SalesIQ</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-view="dashboard" id="nav-dashboard">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-view="upload" id="nav-upload">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <span>Upload Call</span>
+            </a>
+            <a href="#" class="nav-item" data-view="calls" id="nav-calls">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                <span>Call History</span>
+            </a>
+            <a href="#" class="nav-item" data-view="rag" id="nav-rag">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <span>Ask AI (RAG)</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="api-status" id="api-status">
+                <div class="status-dot"></div>
+                <span>Connecting...</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ─── MAIN CONTENT ────────────────────────────────── -->
+    <main class="main-content" id="main-content">
+        
+        <!-- ─── DASHBOARD VIEW ──────────────────────────── -->
+        <section class="view" id="view-dashboard">
+            <header class="view-header">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p class="subtitle">Real-time sales intelligence overview</p>
+                </div>
+                <button class="btn btn-primary" onclick="runDemo()" id="btn-run-demo">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Run Demo Analysis
+                </button>
+            </header>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid" id="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon kpi-blue">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    </div>
+                    <div class="kpi-data">
+                        <span class="kpi-value" id="kpi-total-calls">0</span>
+                        <span class="kpi-label">Total Calls</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon kpi-green">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <div class="kpi-data">
+                        <span class="kpi-value" id="kpi-avg-score">—</span>
+                        <span class="kpi-label">Avg Score</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon kpi-purple">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                    </div>
+                    <div class="kpi-data">
+                        <span class="kpi-value" id="kpi-avg-sentiment">—</span>
+                        <span class="kpi-label">Avg Sentiment</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon kpi-orange">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                    </div>
+                    <div class="kpi-data">
+                        <span class="kpi-value" id="kpi-conversion">—</span>
+                        <span class="kpi-label">Conversion Rate</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts row -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3>Top Objections</h3>
+                    <div id="objections-chart" class="chart-body">
+                        <div class="empty-state-mini">No data yet — run a demo or upload a call</div>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Score Distribution</h3>
+                    <div id="score-dist-chart" class="chart-body">
+                        <div class="empty-state-mini">No data yet — run a demo or upload a call</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent calls -->
+            <div class="chart-card">
+                <h3>Recent Calls</h3>
+                <div id="recent-calls-table">
+                    <div class="empty-state-mini">No calls analyzed yet</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── UPLOAD VIEW ─────────────────────────────── -->
+        <section class="view hidden" id="view-upload">
+            <header class="view-header">
+                <div>
+                    <h1>Upload Sales Call</h1>
+                    <p class="subtitle">Upload an audio recording for AI-powered analysis</p>
+                </div>
+            </header>
+
+            <div class="upload-zone" id="upload-zone">
+                <div class="upload-content">
+                    <div class="upload-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <h3>Drop your audio file here</h3>
+                    <p>or click to browse • WAV, MP3, M4A, OGG, WebM, FLAC</p>
+                    <input type="file" id="file-input" accept=".wav,.mp3,.m4a,.ogg,.webm,.flac,.mp4" hidden>
+                    <button class="btn btn-primary" onclick="document.getElementById('file-input').click()" id="btn-browse">
+                        Browse Files
+                    </button>
+                </div>
+            </div>
+
+            <!-- Processing Status -->
+            <div class="processing-panel hidden" id="processing-panel">
+                <div class="processing-header">
+                    <div class="processing-spinner"></div>
+                    <h3 id="processing-title">Processing...</h3>
+                </div>
+                <div class="pipeline-steps">
+                    <div class="step" id="step-upload"><span class="step-num">1</span> Uploading Audio</div>
+                    <div class="step" id="step-transcribe"><span class="step-num">2</span> Speech-to-Text</div>
+                    <div class="step" id="step-nlp"><span class="step-num">3</span> NLP Pipeline</div>
+                    <div class="step" id="step-moments"><span class="step-num">4</span> Magic Moments</div>
+                    <div class="step" id="step-llm"><span class="step-num">5</span> LLM Intelligence</div>
+                    <div class="step" id="step-rag"><span class="step-num">6</span> RAG Storage</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── CALLS VIEW ──────────────────────────────── -->
+        <section class="view hidden" id="view-calls">
+            <header class="view-header">
+                <div>
+                    <h1>Call History</h1>
+                    <p class="subtitle">All analyzed calls with detailed insights</p>
+                </div>
+            </header>
+            <div id="calls-list" class="calls-grid">
+                <div class="empty-state">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    <h3>No calls yet</h3>
+                    <p>Upload a sales call or run a demo to get started</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── CALL DETAIL VIEW ────────────────────────── -->
+        <section class="view hidden" id="view-call-detail">
+            <header class="view-header">
+                <div>
+                    <button class="btn btn-ghost" onclick="showView('calls')" id="btn-back-calls">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                        Back to History
+                    </button>
+                    <h1 id="detail-title">Call Analysis</h1>
+                </div>
+            </header>
+            <div id="call-detail-content"></div>
+        </section>
+
+        <!-- ─── RAG VIEW ────────────────────────────────── -->
+        <section class="view hidden" id="view-rag">
+            <header class="view-header">
+                <div>
+                    <h1>Ask AI — RAG Intelligence</h1>
+                    <p class="subtitle">Query patterns across all your sales calls</p>
+                </div>
+            </header>
+            <div class="rag-container">
+                <div class="rag-input-group">
+                    <input type="text" id="rag-query-input" placeholder='Try: "What are common objections?" or "What works best for closing deals?"' class="rag-input">
+                    <button class="btn btn-primary" onclick="queryRAG()" id="btn-query-rag">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Search
+                    </button>
+                </div>
+                <div class="rag-suggestions">
+                    <span class="rag-chip" onclick="setRAGQuery('What are the most common customer objections?')">Common objections</span>
+                    <span class="rag-chip" onclick="setRAGQuery('What strategies work best for closing deals?')">Closing strategies</span>
+                    <span class="rag-chip" onclick="setRAGQuery('Show me calls with pricing concerns')">Pricing concerns</span>
+                    <span class="rag-chip" onclick="setRAGQuery('How do agents handle trust issues?')">Trust handling</span>
+                </div>
+                <div id="rag-results" class="rag-results">
+                    <div class="empty-state">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <h3>Ask anything about your calls</h3>
+                        <p>The AI searches across all analyzed calls to find patterns and insights</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Toast container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
